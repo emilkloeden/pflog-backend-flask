@@ -1,5 +1,5 @@
 from flask import abort, request
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from peewee import IntegrityError
 from playhouse.shortcuts import model_to_dict
 
@@ -32,3 +32,20 @@ def create_user():
         return dict_, 201
     except IntegrityError:
         abort(409)
+
+@app.route("/signin", methods=["POST"])
+def signin():
+    if not request.json:
+        abort(400)
+
+    elif "username" not in request.json or "password" not in request.json:
+        abort(400)
+    r = request.json
+    user = User.select().where(
+        User.username==r["username"]
+    ).first()
+    if not user:
+        abort(400)
+    if not check_password_hash(user.password, r["password"]):
+        abort(400)
+    return {"token": "token"}
