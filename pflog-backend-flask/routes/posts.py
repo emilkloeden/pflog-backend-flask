@@ -6,6 +6,7 @@ from app import app
 from auth import auth
 from models import Comment, Post, User, DoesNotExist
 from utils import slugify
+from tokenauth import token_required
 
 
 @app.route("/posts", methods=["GET"])
@@ -28,12 +29,12 @@ def list_posts():
 
 
 @app.route("/posts", methods=["POST"])
-@auth.login_required(role="author")
-def create_post():
+@token_required(role="author")
+def create_post(current_user):
     if not request.json:
         abort(400)
     Post.create(
-        user=auth.current_user(),
+        user=current_user,
         title=request.json["title"],
         slug=slugify(request.json["title"]),
         body=request.json["body"],
