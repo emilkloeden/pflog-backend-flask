@@ -37,6 +37,9 @@ def token_required(fn=None, *, role=None):
         except Exception as e:
             print(e)
             abort(401)
-        return fn(current_user, *args, **kwargs)
+        try:
+            return fn(current_user, *args, **kwargs)
+        except TypeError:
+            return fn(*args, **kwargs)
 
     return decorated

@@ -6,7 +6,6 @@ from peewee import IntegrityError
 from playhouse.shortcuts import model_to_dict
 
 from app import app
-from auth import auth
 from tokenauth import token_required
 from models import User
 
@@ -26,6 +25,7 @@ def get_user(current_user):
 
 
 @app.route("/users", methods=["POST"])
+@token_required(role="admin")
 def create_user():
     required_fields = ["username", "first_name", "surname", "password", "email"]
     if not request.json:
@@ -44,14 +44,15 @@ def create_user():
         )
         user.save()
 
-        token = jwt.encode(
-            {
-                "username": user.username,
-                "exp": datetime.utcnow() + timedelta(minutes=30),
-            },
-            app.config["SECRET_KEY"],
-        )
-        return make_response(jsonify({"token": token.decode("UTF-8")}), 201)
+        # Not required if admin creates users
+        # token = jwt.encode(
+        #     {
+        #         "username": user.username,
+        #         "exp": datetime.utcnow() + timedelta(minutes=30),
+        #     },
+        #     app.config["SECRET_KEY"],
+        # )
+        return make_response(jsonify({"message": "successfully created user."}), 201)
     except IntegrityError:
         abort(409)
 
